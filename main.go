@@ -3,6 +3,8 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"math/big"
 	"net/http"
 	"os"
 
@@ -12,38 +14,38 @@ import (
 	"bignum-service/pkg/jrpcserver"
 )
 
-type NumObject struct {
-	Name  *string `json:"name"`
-	Value *string `json:"value"`
-}
-
+// BigNumSvc is the RPC service placeholder for the Big Number Service
 type BigNumSvc struct{}
 
-func (bns *BigNumSvc) Create(numObj *NumObject, reply *string) error {
-	log.Debug().Interface("numObj", numObj).Str("method", "create").Msg("")
-	if numObj.Value == nil {
+func (bns *BigNumSvc) Create(params []string, reply *string) error {
+	log.Debug().Interface("params", params).Str("method", "create").Msg("")
+
+	// First param is the number object's name
+	// The number object's value must be provided (the second param)
+	if len(params) < 2 {
 		return errors.New("value must be provided")
 	}
+
+	a := &big.Float{}
+	_, ok := a.SetString(params[1])
+	if !ok {
+		return fmt.Errorf("invalid big float number %s", params[1])
+	}
+
 	*reply = "created"
 	return nil
 }
 
 func paramsParser(inputParamsJSONRaw []byte) (rpcParamsJSONRaw []byte, err error) {
+	// Input params should be an array of string
 	jrpcParams := []string{}
 	err = json.Unmarshal(inputParamsJSONRaw, &jrpcParams)
 	if err != nil {
 		return nil, err
 	}
-	if len(jrpcParams) > 2 || len(jrpcParams) == 0 {
-		return nil, errors.New("only accept one or two params")
-	}
-	numObj := &NumObject{
-		Name: &jrpcParams[0],
-	}
-	if len(jrpcParams) == 2 {
-		numObj.Value = &jrpcParams[1]
-	}
-	jb, err := json.Marshal([]*NumObject{numObj})
+	// As normal RPC will only consider the first element in the field `params`,
+	// We put the input params as array of string as the first element in the array
+	jb, err := json.Marshal([][]string{jrpcParams})
 	log.Debug().Str("params", string(jb)).Msg("")
 	return jb, err
 }
@@ -54,6 +56,7 @@ func main() {
 	s := jrpcserver.New(map[string]string{
 		"create": "BigNumSvc.Create",
 	}, paramsParser)
+
 	BigNumSvc := new(BigNumSvc)
 	s.Register(BigNumSvc)
 	http.Handle("/rpc", s)
