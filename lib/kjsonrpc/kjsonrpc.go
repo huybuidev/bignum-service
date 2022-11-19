@@ -14,7 +14,12 @@ import (
 
 var errMissingParams = errors.New("request body missing params")
 
-type ParamParserFunc func(inputParamsJSONRaw []byte) (rpcParamsJSONRaw []byte, err error)
+type ParamParserFunc func(inputParamsJSONRaw json.RawMessage, userID string) (methodParam *MethodParam, err error)
+
+type MethodParam struct {
+	Params []string `json:"params"`
+	UserID string   `json:"user_id"`
+}
 
 type serverCodec struct {
 	dec *json.Decoder // for reading JSON values
@@ -36,10 +41,11 @@ type serverCodec struct {
 
 	methodMap   map[string]string
 	paramParser ParamParserFunc
+	userID      string
 }
 
 // NewServerCodec returns a new rpc.ServerCodec using JSON-RPC on conn.
-func NewServerCodec(conn io.ReadWriteCloser, methodMap map[string]string, paramParser ParamParserFunc) rpc.ServerCodec {
+func NewServerCodec(conn io.ReadWriteCloser, methodMap map[string]string, paramParser ParamParserFunc, userID string) rpc.ServerCodec {
 	return &serverCodec{
 		dec:         json.NewDecoder(conn),
 		enc:         json.NewEncoder(conn),
@@ -47,6 +53,7 @@ func NewServerCodec(conn io.ReadWriteCloser, methodMap map[string]string, paramP
 		pending:     make(map[uint64]*json.RawMessage),
 		methodMap:   methodMap,
 		paramParser: paramParser,
+		userID:      userID,
 	}
 }
 
@@ -104,10 +111,19 @@ func (c *serverCodec) ReadRequestBody(x any) error {
 	// Should think about making RPC more general.
 	if c.paramParser != nil {
 		var err error
-		*c.req.Params, err = c.paramParser(*c.req.Params)
+		methodParam, err := c.paramParser(*c.req.Params, c.userID)
 		if err != nil {
 			return err
 		}
+		rpcParams := []*MethodParam{}
+		if methodParam != nil {
+			rpcParams = append(rpcParams, methodParam)
+		}
+		jb, err := json.Marshal(rpcParams)
+		if err != nil {
+			return err
+		}
+		*c.req.Params = jb
 	}
 	var params [1]any
 	params[0] = x
@@ -147,5 +163,5 @@ func (c *serverCodec) Close() error {
 // ServeConn blocks, serving the connection until the client hangs up.
 // The caller typically invokes ServeConn in a go statement.
 func ServeConn(conn io.ReadWriteCloser) {
-	rpc.ServeCodec(NewServerCodec(conn, nil, nil))
+	rpc.ServeCodec(NewServerCodec(conn, nil, nil, ""))
 }

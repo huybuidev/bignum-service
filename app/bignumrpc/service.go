@@ -2,6 +2,7 @@ package bignumrpc
 
 import (
 	"bignum-service/lib/ctxlib"
+	"bignum-service/lib/kjsonrpc"
 	"bignum-service/service/numobj"
 	"errors"
 
@@ -19,17 +20,17 @@ func New(numObjSvc *numobj.Service) *BigNumRPCService {
 	}
 }
 
-func (bns *BigNumRPCService) Create(params []string, reply *string) error {
-	log.Debug().Interface("params", params).Str("method", "create").Msg("")
+func (bns *BigNumRPCService) Create(methodParams *kjsonrpc.MethodParam, reply *string) error {
+	log.Debug().Interface("methodParams", methodParams).Str("method", "create").Msg("")
 
 	// First param is the number object's name
 	// The number object's value must be provided (the second param)
-	if len(params) < 2 {
+	if len(methodParams.Params) < 2 {
 		return errors.New("value must be provided")
 	}
 
-	name := params[0]
-	valueStr := params[1]
+	name := methodParams.Params[0]
+	valueStr := methodParams.Params[1]
 
 	ctx := ctxlib.Background()
 	err := bns.numObjSvc.PutNum(ctx, name, valueStr)
@@ -42,17 +43,17 @@ func (bns *BigNumRPCService) Create(params []string, reply *string) error {
 	return nil
 }
 
-func (bns *BigNumRPCService) Update(params []string, reply *string) error {
-	log.Debug().Interface("params", params).Str("method", "update").Msg("")
+func (bns *BigNumRPCService) Update(methodParams *kjsonrpc.MethodParam, reply *string) error {
+	log.Debug().Interface("methodParams", methodParams).Str("method", "update").Msg("")
 
 	// First param is the number object's name
 	// The number object's value must be provided (the second param)
-	if len(params) < 2 {
+	if len(methodParams.Params) < 2 {
 		return errors.New("value must be provided")
 	}
 
-	name := params[0]
-	valueStr := params[1]
+	name := methodParams.Params[0]
+	valueStr := methodParams.Params[1]
 
 	ctx := ctxlib.Background()
 	err := bns.numObjSvc.UpdateNum(ctx, name, valueStr)
@@ -65,15 +66,15 @@ func (bns *BigNumRPCService) Update(params []string, reply *string) error {
 	return nil
 }
 
-func (bns *BigNumRPCService) Delete(params []string, reply *string) error {
-	log.Debug().Interface("params", params).Str("method", "delete").Msg("")
+func (bns *BigNumRPCService) Delete(methodParams *kjsonrpc.MethodParam, reply *string) error {
+	log.Debug().Interface("methodParams", methodParams).Str("method", "delete").Msg("")
 
 	// First param is the number object's name
-	if len(params) < 1 {
+	if len(methodParams.Params) < 1 {
 		return errors.New("number object name must be provided")
 	}
 
-	name := params[0]
+	name := methodParams.Params[0]
 
 	ctx := ctxlib.Background()
 	err := bns.numObjSvc.DeleteNum(ctx, name)
@@ -86,14 +87,14 @@ func (bns *BigNumRPCService) Delete(params []string, reply *string) error {
 	return nil
 }
 
-func (bns *BigNumRPCService) Add(params []string, reply *string) error {
-	log.Debug().Interface("params", params).Str("method", "multiply").Msg("")
+func (bns *BigNumRPCService) Add(methodParams *kjsonrpc.MethodParam, reply *string) error {
+	log.Debug().Interface("methodParams", methodParams).Str("method", "multiply").Msg("")
 
-	if len(params) < 2 {
+	if len(methodParams.Params) < 2 {
 		return errors.New("the name of two number objects must be provided")
 	}
-	num1Str := params[0]
-	num2Str := params[1]
+	num1Str := methodParams.Params[0]
+	num2Str := methodParams.Params[1]
 
 	ctx := ctxlib.Background()
 	result, err := bns.numObjSvc.Add(ctx, num1Str, num2Str)
@@ -104,14 +105,14 @@ func (bns *BigNumRPCService) Add(params []string, reply *string) error {
 	return nil
 }
 
-func (bns *BigNumRPCService) Subtract(params []string, reply *string) error {
-	log.Debug().Interface("params", params).Str("method", "multiply").Msg("")
+func (bns *BigNumRPCService) Subtract(methodParams *kjsonrpc.MethodParam, reply *string) error {
+	log.Debug().Interface("methodParams", methodParams).Str("method", "multiply").Msg("")
 
-	if len(params) < 2 {
+	if len(methodParams.Params) < 2 {
 		return errors.New("the name of two number objects must be provided")
 	}
-	num1Str := params[0]
-	num2Str := params[1]
+	num1Str := methodParams.Params[0]
+	num2Str := methodParams.Params[1]
 
 	ctx := ctxlib.Background()
 	result, err := bns.numObjSvc.Subtract(ctx, num1Str, num2Str)
@@ -122,14 +123,14 @@ func (bns *BigNumRPCService) Subtract(params []string, reply *string) error {
 	return nil
 }
 
-func (bns *BigNumRPCService) Multiply(params []string, reply *string) error {
-	log.Debug().Interface("params", params).Str("method", "multiply").Msg("")
+func (bns *BigNumRPCService) Multiply(methodParams *kjsonrpc.MethodParam, reply *string) error {
+	log.Debug().Interface("methodParams", methodParams).Str("method", "multiply").Msg("")
 
-	if len(params) < 2 {
+	if len(methodParams.Params) < 2 {
 		return errors.New("the name of two number objects must be provided")
 	}
-	num1Str := params[0]
-	num2Str := params[1]
+	num1Str := methodParams.Params[0]
+	num2Str := methodParams.Params[1]
 
 	ctx := ctxlib.Background()
 	result, err := bns.numObjSvc.Multiply(ctx, num1Str, num2Str)
@@ -140,14 +141,14 @@ func (bns *BigNumRPCService) Multiply(params []string, reply *string) error {
 	return nil
 }
 
-func (bns *BigNumRPCService) Divide(params []string, reply *string) error {
-	log.Debug().Interface("params", params).Str("method", "multiply").Msg("")
+func (bns *BigNumRPCService) Divide(methodParams *kjsonrpc.MethodParam, reply *string) error {
+	log.Debug().Interface("methodParams", methodParams).Str("method", "multiply").Msg("")
 
-	if len(params) < 2 {
+	if len(methodParams.Params) < 2 {
 		return errors.New("the name of two number objects must be provided")
 	}
-	num1Str := params[0]
-	num2Str := params[1]
+	num1Str := methodParams.Params[0]
+	num2Str := methodParams.Params[1]
 
 	ctx := ctxlib.Background()
 	result, err := bns.numObjSvc.Divide(ctx, num1Str, num2Str)

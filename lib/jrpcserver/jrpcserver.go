@@ -67,11 +67,12 @@ func (s *Server) Register(rcvr any) {
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	codec := kjsonrpc.NewServerCodec(&HttpConn{in: req.Body, out: w}, s.methodMap, s.paramsParser)
+	userID := req.RemoteAddr
+	codec := kjsonrpc.NewServerCodec(&HttpConn{in: req.Body, out: w}, s.methodMap, s.paramsParser, userID)
 	s.rpcServer.ServeCodec(codec)
 }
 
-func stringArrayParamsParser(inputParamsJSONRaw []byte) (rpcParamsJSONRaw []byte, err error) {
+func stringArrayParamsParser(inputParamsJSONRaw json.RawMessage, userID string) (methodParam *kjsonrpc.MethodParam, err error) {
 	// Input params should be an array of string
 	jrpcParams := []string{}
 	err = json.Unmarshal(inputParamsJSONRaw, &jrpcParams)
@@ -79,9 +80,11 @@ func stringArrayParamsParser(inputParamsJSONRaw []byte) (rpcParamsJSONRaw []byte
 		return nil, err
 	}
 	// As normal RPC will only consider the first element in the field `params`,
-	// We put the input params as array of string as the first element in the array
-	jb, err := json.Marshal([][]string{jrpcParams})
-	return jb, err
+	// We convert the input params as array of string and user ID into a custom param struct
+	return &kjsonrpc.MethodParam{
+		Params: jrpcParams,
+		UserID: userID,
+	}, nil
 }
 
 func NewServerWithStringArrayParams(methodMap map[string]string) (jrpcServer *Server) {
