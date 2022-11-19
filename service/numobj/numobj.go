@@ -2,7 +2,6 @@ package numobj
 
 import (
 	"bignum-service/domain/bignum"
-	"bignum-service/domain/bignum/bignummem"
 	"bignum-service/lib/ctxlib"
 	"math/big"
 )
@@ -29,7 +28,7 @@ func NewService(cfgs ...NumObjConfig) (*Service, error) {
 }
 
 // WithBignumMemRepo applies a given BignumMemory repository to the service
-func WithBignumMemRepo(bignumMemRepo *bignummem.BignumMemoryRepo) NumObjConfig {
+func WithBignumMemRepo(bignumMemRepo bignum.Repository) NumObjConfig {
 	// return a function that matches the NumObjConfig alias,
 	// You need to return this so that the parent function can take in all the needed parameters
 	return func(nos *Service) error {
