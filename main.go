@@ -15,7 +15,13 @@ func main() {
 	setupLogging()
 
 	s := jrpcserver.NewServerWithStringArrayParams(map[string]string{
-		"create": "BigNumService.Create",
+		"create":   "BigNumService.Create",
+		"update":   "BigNumService.Update",
+		"delete":   "BigNumService.Delete",
+		"add":      "BigNumService.Add",
+		"subtract": "BigNumService.Subtract",
+		"multiply": "BigNumService.Multiply",
+		"divide":   "BigNumService.Divide",
 	})
 
 	s.Register(&bignum.BigNumService{})
