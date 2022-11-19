@@ -104,23 +104,26 @@ func (s *Service) getNumberValue(ctx ctxlib.Context, numStr string) (floatValue 
 }
 
 func (s *Service) compute(ctx ctxlib.Context, num1Str, num2Str string, computeFunc func(*big.Float, *big.Float) *big.Float) (result *big.Float, err error) {
+	lg := ctx.Logger.With().Str("num1Str", num1Str).Str("num2Str", num2Str).Logger()
 	if num1Str == "" || num2Str == "" {
-		ctx.Logger.Error().Str("num1Str", num1Str).Str("num2Str", num2Str).Msg("empty input")
+		lg.Error().Msg("empty input")
 		return nil, ErrEmptyInput
 	}
 
 	numFloat1, err := s.getNumberValue(ctx, num1Str)
 	if err != nil {
-		ctx.Logger.Err(err).Str("num1Str", num1Str).Str("num2Str", num2Str).Msg("could not get value for num1Str")
+		lg.Err(err).Msg("could not get value for num1Str")
 		return nil, err
 	}
 	numFloat2, err := s.getNumberValue(ctx, num2Str)
 	if err != nil {
-		ctx.Logger.Err(err).Str("num1Str", num1Str).Str("num2Str", num2Str).Msg("could not get value for num2Str")
+		lg.Err(err).Msg("could not get value for num2Str")
 		return nil, err
 	}
 
 	result = computeFunc(numFloat1, numFloat2)
+
+	lg.Info().Interface("result", result).Msg("track result")
 
 	return result, nil
 }
