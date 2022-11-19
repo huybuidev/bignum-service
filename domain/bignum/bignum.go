@@ -54,10 +54,10 @@ func ParseFloat(value string) (floatNum *big.Float, err error) {
 }
 
 func (bn *BigNum) Name() string {
-	if bn.numObj != nil {
-		return *bn.numObj.Name
+	if bn == nil || bn.numObj == nil {
+		return ""
 	}
-	return ""
+	return *bn.numObj.Name
 }
 
 func (bn *BigNum) Value() *big.Float {
