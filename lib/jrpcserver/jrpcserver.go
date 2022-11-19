@@ -8,7 +8,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	"bignum-service/pkg/kjsonrpc"
+	"bignum-service/lib/kjsonrpc"
 )
 
 type HttpConn struct {
