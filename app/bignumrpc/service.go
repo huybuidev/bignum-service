@@ -55,7 +55,7 @@ func (bns *BigNumRPCService) Update(params []string, reply *string) error {
 	valueStr := params[1]
 
 	ctx := ctxlib.Background()
-	err := bns.numObjSvc.PutNum(ctx, name, valueStr)
+	err := bns.numObjSvc.UpdateNum(ctx, name, valueStr)
 	if err != nil {
 		return err
 	}

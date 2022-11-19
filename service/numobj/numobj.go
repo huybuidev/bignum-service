@@ -54,12 +54,27 @@ func (s *Service) PutNum(ctx ctxlib.Context, name string, value string) (err err
 	}
 
 	// Check if value is a big number
-	num, err := bignum.NewBigNum(name, value)
+	num, err := bignum.NewFromString(name, value)
 	if err != nil {
 		return ErrInvalidBigNumber
 	}
 
 	return s.bignumRepo.PutNum(ctx, num)
+}
+
+// UpdateNum updates a number object to the storage
+func (s *Service) UpdateNum(ctx ctxlib.Context, name string, value string) (err error) {
+	if name == "" {
+		return ErrEmptyName
+	}
+
+	// Check if value is a big number
+	num, err := bignum.NewFromString(name, value)
+	if err != nil {
+		return ErrInvalidBigNumber
+	}
+
+	return s.bignumRepo.UpdateNum(ctx, num)
 }
 
 // DeleteNum deletes a number object with provided name from the storage
