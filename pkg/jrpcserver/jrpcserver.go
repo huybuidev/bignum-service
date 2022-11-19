@@ -23,6 +23,28 @@ type Server struct {
 	paramsParser kjsonrpc.ParamParserFunc
 }
 
+// New a JSON-RPC server that supports:
+//
+//  1. Custom method mapping
+//     The standard net/rpc/json only support RPC-style of method value: `service.method`
+//     In order to correctly invoke the method handler, we have to pass method value that
+//     follows this style.
+//
+//     In order to support custom method name, we can make a custom method mapping:
+//     customMethodName -> rpcTypeMethodName
+//     E.g.: methodMap = map[string]string{"create": "BigNumSvc.Create"}
+//     -> If the input method value in the JSON request is "create", it will be translate to "BigNumSvc.Create"
+//     before passing down as RPC message.
+//
+//     If the input method could not be found in the methodMap (or methodMap is nil/empty),
+//     The method value will be kept as it is.
+//
+//  2. Custom params parser function
+//     JSON-RPC params is an array of values.
+//     RPC params is an array of struct/object and only the first element will be used.
+//     -> we need a custom params parser function which takes JSON raw bytes
+//     for `params` as input. Then it is required to output JSON raw bytes
+//     for `params` as correct format for RPC params.
 func New(methodMap map[string]string, paramsParser ...kjsonrpc.ParamParserFunc) (jrpcServer *Server) {
 	var paramsParserFunc kjsonrpc.ParamParserFunc
 	if len(paramsParser) > 0 {
