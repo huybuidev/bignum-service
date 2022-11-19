@@ -124,6 +124,22 @@ func TestPutNum(t *testing.T) {
 			numObjects:         map[string]*big.Float{"a": big.NewFloat(1.23)},
 			expectedNumObjects: map[string]*big.Float{"a": big.NewFloat(1.23), "abc": big.NewFloat(4.56)},
 		},
+		{
+			name:               "number object already existed",
+			numObjectName:      "abc",
+			numObjectValue:     big.NewFloat(4.56),
+			expectedErr:        ErrAlreadyExist,
+			numObjects:         map[string]*big.Float{"abc": big.NewFloat(1.23)},
+			expectedNumObjects: map[string]*big.Float{"abc": big.NewFloat(1.23)},
+		},
+		{
+			name:               "map not init",
+			numObjectName:      "abc",
+			numObjectValue:     big.NewFloat(4.56),
+			expectedErr:        nil,
+			numObjects:         nil,
+			expectedNumObjects: map[string]*big.Float{"abc": big.NewFloat(4.56)},
+		},
 	}
 
 	for idx, tc := range testCases {
@@ -186,5 +202,12 @@ func TestDeleteNum(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestNewRepo(t *testing.T) {
+	r := NewBignumMemoryRepository()
+	if r.numObjects == nil {
+		t.Error("Repo internal map must not be nil")
 	}
 }
