@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"net/rpc"
 
-	"github.com/rs/zerolog/log"
-
 	"bignum-service/lib/kjsonrpc"
 )
 
@@ -69,10 +67,8 @@ func (s *Server) Register(rcvr any) {
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	log.Debug().Msg("got a request")
 	codec := kjsonrpc.NewServerCodec(&HttpConn{in: req.Body, out: w}, s.methodMap, s.paramsParser)
 	s.rpcServer.ServeCodec(codec)
-	log.Debug().Msg("finished serving request")
 }
 
 func stringArrayParamsParser(inputParamsJSONRaw []byte) (rpcParamsJSONRaw []byte, err error) {
@@ -85,7 +81,6 @@ func stringArrayParamsParser(inputParamsJSONRaw []byte) (rpcParamsJSONRaw []byte
 	// As normal RPC will only consider the first element in the field `params`,
 	// We put the input params as array of string as the first element in the array
 	jb, err := json.Marshal([][]string{jrpcParams})
-	log.Debug().Str("params", string(jb)).Msg("")
 	return jb, err
 }
 

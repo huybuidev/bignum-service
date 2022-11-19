@@ -12,7 +12,7 @@ import (
 	"sync"
 )
 
-var errMissingParams = errors.New("kjsonrpc: request body missing params")
+var errMissingParams = errors.New("request body missing params")
 
 type ParamParserFunc func(inputParamsJSONRaw []byte) (rpcParamsJSONRaw []byte, err error)
 

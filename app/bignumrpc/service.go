@@ -86,6 +86,42 @@ func (bns *BigNumRPCService) Delete(params []string, reply *string) error {
 	return nil
 }
 
+func (bns *BigNumRPCService) Add(params []string, reply *string) error {
+	log.Debug().Interface("params", params).Str("method", "multiply").Msg("")
+
+	if len(params) < 2 {
+		return errors.New("the name of two number objects must be provided")
+	}
+	num1Str := params[0]
+	num2Str := params[1]
+
+	ctx := ctxlib.Background()
+	result, err := bns.numObjSvc.Add(ctx, num1Str, num2Str)
+	if err != nil {
+		return err
+	}
+	*reply = result.String()
+	return nil
+}
+
+func (bns *BigNumRPCService) Subtract(params []string, reply *string) error {
+	log.Debug().Interface("params", params).Str("method", "multiply").Msg("")
+
+	if len(params) < 2 {
+		return errors.New("the name of two number objects must be provided")
+	}
+	num1Str := params[0]
+	num2Str := params[1]
+
+	ctx := ctxlib.Background()
+	result, err := bns.numObjSvc.Subtract(ctx, num1Str, num2Str)
+	if err != nil {
+		return err
+	}
+	*reply = result.String()
+	return nil
+}
+
 func (bns *BigNumRPCService) Multiply(params []string, reply *string) error {
 	log.Debug().Interface("params", params).Str("method", "multiply").Msg("")
 
@@ -97,6 +133,24 @@ func (bns *BigNumRPCService) Multiply(params []string, reply *string) error {
 
 	ctx := ctxlib.Background()
 	result, err := bns.numObjSvc.Multiply(ctx, num1Str, num2Str)
+	if err != nil {
+		return err
+	}
+	*reply = result.String()
+	return nil
+}
+
+func (bns *BigNumRPCService) Divide(params []string, reply *string) error {
+	log.Debug().Interface("params", params).Str("method", "multiply").Msg("")
+
+	if len(params) < 2 {
+		return errors.New("the name of two number objects must be provided")
+	}
+	num1Str := params[0]
+	num2Str := params[1]
+
+	ctx := ctxlib.Background()
+	result, err := bns.numObjSvc.Divide(ctx, num1Str, num2Str)
 	if err != nil {
 		return err
 	}
