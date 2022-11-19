@@ -4,7 +4,6 @@ import (
 	"bignum-service/domain/bignum"
 	"bignum-service/domain/bignum/bignummem"
 	"bignum-service/lib/ctxlib"
-	"fmt"
 	"math/big"
 )
 
@@ -85,34 +84,67 @@ func (s *Service) DeleteNum(ctx ctxlib.Context, name string) (err error) {
 	return s.bignumRepo.DeleteNum(ctx, name)
 }
 
-// Multiply receives two params which could be a number object with provided name or a big number value,
-// then return the multiplied result
-func (s *Service) Multiply(ctx ctxlib.Context, num1Str, num2Str string) (result *big.Float, err error) {
+// getNumberValue receives a string and first check if it is a valid big float number.
+// If yes -> returns the number in *big.Float type
+// If no  -> consider this string is the name of a number object.
+//
+//		 It will use bignum repo to retrieve the value of this number object and return.
+//	  If no number object found, return error
+func (s *Service) getNumberValue(ctx ctxlib.Context, numStr string) (floatValue *big.Float, err error) {
+	floatValue, err = bignum.ParseFloat(numStr)
+	if err != nil {
+		// Invalid big float number, consider it as the name of an number object
+		bigNum, err := s.GetNum(ctx, numStr)
+		if err != nil {
+			return nil, ErrNumberObjectNotFound
+		}
+		floatValue = bigNum.Value()
+	}
+	return floatValue, nil
+}
+
+func (s *Service) compute(ctx ctxlib.Context, num1Str, num2Str string, computeFunc func(*big.Float, *big.Float) *big.Float) (result *big.Float, err error) {
 	if num1Str == "" || num2Str == "" {
 		ctx.Logger.Error().Str("num1Str", num1Str).Str("num2Str", num2Str).Msg("empty input")
 		return nil, ErrEmptyInput
 	}
-	numFloat1, err := bignum.ParseFloat(num1Str)
+
+	numFloat1, err := s.getNumberValue(ctx, num1Str)
 	if err != nil {
-		// Invalid big float number, consider it as the name of an number object
-		num1, err := s.GetNum(ctx, num1Str)
-		if err != nil {
-			return nil, fmt.Errorf("first number object not found")
-		}
-		numFloat1 = num1.Value()
+		ctx.Logger.Err(err).Str("num1Str", num1Str).Str("num2Str", num2Str).Msg("could not get value for num1Str")
+		return nil, err
+	}
+	numFloat2, err := s.getNumberValue(ctx, num2Str)
+	if err != nil {
+		ctx.Logger.Err(err).Str("num1Str", num1Str).Str("num2Str", num2Str).Msg("could not get value for num2Str")
+		return nil, err
 	}
 
-	numFloat2, err := bignum.ParseFloat(num2Str)
-	if err != nil {
-		// Invalid big float number, consider it as the name of an number object
-		num2, err := s.GetNum(ctx, num2Str)
-		if err != nil {
-			return nil, fmt.Errorf("second number object not found")
-		}
-		numFloat2 = num2.Value()
-	}
-
-	result = numFloat1.Mul(numFloat1, numFloat2)
+	result = computeFunc(numFloat1, numFloat2)
 
 	return result, nil
+}
+
+// Add receives two params which could be a number object with provided name or a big number value,
+// then return the sum result
+func (s *Service) Add(ctx ctxlib.Context, num1Str, num2Str string) (result *big.Float, err error) {
+	return s.compute(ctx, num1Str, num2Str, new(big.Float).Add)
+}
+
+// Subtract receives two params which could be a number object with provided name or a big number value,
+// then return the subtracted result
+func (s *Service) Subtract(ctx ctxlib.Context, num1Str, num2Str string) (result *big.Float, err error) {
+	return s.compute(ctx, num1Str, num2Str, new(big.Float).Sub)
+}
+
+// Multiply receives two params which could be a number object with provided name or a big number value,
+// then return the multiplied result
+func (s *Service) Multiply(ctx ctxlib.Context, num1Str, num2Str string) (result *big.Float, err error) {
+	return s.compute(ctx, num1Str, num2Str, new(big.Float).Mul)
+}
+
+// Divide receives two params which could be a number object with provided name or a big number value,
+// then return the divided result
+func (s *Service) Divide(ctx ctxlib.Context, num1Str, num2Str string) (result *big.Float, err error) {
+	return s.compute(ctx, num1Str, num2Str, new(big.Float).Quo)
 }
