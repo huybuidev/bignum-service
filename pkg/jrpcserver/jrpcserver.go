@@ -1,11 +1,14 @@
 package jrpcserver
 
 import (
-	"bignum-service/pkg/kjsonrpc"
+	"encoding/json"
 	"io"
-	"log"
 	"net/http"
 	"net/rpc"
+
+	"github.com/rs/zerolog/log"
+
+	"bignum-service/pkg/kjsonrpc"
 )
 
 type HttpConn struct {
@@ -66,9 +69,26 @@ func (s *Server) Register(rcvr any) {
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	log.Println("got a request")
+	log.Debug().Msg("got a request")
 	codec := kjsonrpc.NewServerCodec(&HttpConn{in: req.Body, out: w}, s.methodMap, s.paramsParser)
-	log.Println("ServeCodec")
 	s.rpcServer.ServeCodec(codec)
-	log.Println("finished serving request")
+	log.Debug().Msg("finished serving request")
+}
+
+func stringArrayParamsParser(inputParamsJSONRaw []byte) (rpcParamsJSONRaw []byte, err error) {
+	// Input params should be an array of string
+	jrpcParams := []string{}
+	err = json.Unmarshal(inputParamsJSONRaw, &jrpcParams)
+	if err != nil {
+		return nil, err
+	}
+	// As normal RPC will only consider the first element in the field `params`,
+	// We put the input params as array of string as the first element in the array
+	jb, err := json.Marshal([][]string{jrpcParams})
+	log.Debug().Str("params", string(jb)).Msg("")
+	return jb, err
+}
+
+func NewServerWithStringArrayParams(methodMap map[string]string) (jrpcServer *Server) {
+	return New(methodMap, stringArrayParamsParser)
 }
